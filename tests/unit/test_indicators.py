@@ -2,10 +2,12 @@ import math
 
 import pytest
 
+import indicators
 from app.modules.indicators.catalog import CATALOG
 from app.modules.indicators.schemas import IndicatorSelection
 from app.modules.indicators.service import IndicatorService
 from app.modules.market.schemas import Candle
+from coinfighter import indicators as coinfighter_indicators
 from coinfighter.indicators import (
     EMA,
     SMA,
@@ -26,6 +28,12 @@ from coinfighter.indicators import (
     williams_r,
     wma,
 )
+
+
+def test_short_import_path_exports_complete_public_api() -> None:
+    assert indicators.__all__ == coinfighter_indicators.__all__
+    for name in indicators.__all__:
+        assert getattr(indicators, name) is getattr(coinfighter_indicators, name)
 
 
 def test_batch_and_incremental_averages_match() -> None:

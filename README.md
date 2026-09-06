@@ -103,13 +103,13 @@ class ExampleStrategy(Strategy):
 `None`；`SMA` 和 `EMA` 类适合在逐根 K 线回测中增量计算：
 
 ```python
-from coinfighter.indicators import EMA, macd, rsi, sma
+import indicators
 
-ma20 = sma(closes, 20)
-macd_result = macd(closes, fast=12, slow=26, signal=9)
-rsi14 = rsi(closes, 14)
+ma20 = indicators.sma(closes, 20)
+macd_result = indicators.macd(closes, fast=12, slow=26, signal=9)
+rsi14 = indicators.rsi(closes, 14)
 
-ema20 = EMA(20)
+ema20 = indicators.EMA(20)
 latest = ema20.update(bar.close)
 ```
 

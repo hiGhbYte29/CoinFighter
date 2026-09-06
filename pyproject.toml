@@ -26,7 +26,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["app*", "coinfighter*"]
+include = ["app*", "coinfighter*", "indicators*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

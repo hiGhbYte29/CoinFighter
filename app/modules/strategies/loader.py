@@ -10,7 +10,8 @@ from app.modules.strategies.base import Strategy
 from app.modules.strategies.schemas import StrategyInfo, StrategySource
 from app.modules.strategies.validator import validate_python_source
 
-DEFAULT_STRATEGY_SOURCE = """from app.modules.strategies.base import Bar, Strategy, StrategyContext
+DEFAULT_STRATEGY_SOURCE = """import indicators
+from app.modules.strategies.base import Bar, Strategy, StrategyContext
 
 
 class MyStrategy(Strategy):
@@ -19,7 +20,7 @@ class MyStrategy(Strategy):
     default_parameters = {{}}
 
     def on_bar(self, context: StrategyContext, bar: Bar) -> None:
-        # 示例：在这里读取 context.closes() 并产生模拟交易信号
+        # 示例：通过 indicators.rsi(context.closes(), 14) 计算指标并产生模拟交易信号
         pass
 """
 
