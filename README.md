@@ -12,7 +12,7 @@ CoinFighter 是一个本地优先的数字资产行情研究与策略回测工�
 - 浏览器内创建、编辑和校验 Python 策略。
 - 下一根 K 线开盘成交的现货多头回测，支持手续费和滑点。
 - 本地保存回测配置、状态、成交、净值和汇总指标。
-- Vue 3 GUI：实时看盘、数据管理、策略实验室和回测分析。
+- Vue 3 GUI：行情、数据、策略和回测。
 - 从旧版 CoinFighter CSV 数据集迁移到 Parquet 的脚本。
 
 详细设计见 [架构文档](docs/architecture.md)。
@@ -52,7 +52,7 @@ cd ..
 分别运行后端和 Vite 开发服务器：
 
 ```bash
-.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000 --reload
+.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8001 --reload
 cd frontend
 pnpm run dev
 ```

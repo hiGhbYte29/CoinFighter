@@ -22,6 +22,8 @@ async def test_local_service_and_strategy_endpoints(monkeypatch, tmp_path: Path)
                     "okx",
                     "bybit",
                 ]
+                invalid_page_size = await client.get("/api/v1/market/markets?page_size=101")
+                assert invalid_page_size.status_code == 422
                 assert (await client.get("/api/v1/health/ready")).json()["provider"] == "binance"
                 strategies = await client.get("/api/v1/strategies")
                 assert strategies.status_code == 200

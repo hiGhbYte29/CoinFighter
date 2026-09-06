@@ -9,6 +9,10 @@ class MarketDataProvider(Protocol):
 
     async def get_ticker(self, symbol: str) -> dict: ...
 
+    async def get_tickers(self, quote: str = "USDT") -> list[dict]: ...
+
+    async def get_order_book(self, symbol: str, limit: int = 20) -> dict: ...
+
     async def get_candles(
         self,
         symbol: str,

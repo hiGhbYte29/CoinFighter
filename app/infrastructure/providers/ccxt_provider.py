@@ -98,6 +98,90 @@ class CcxtProvider:
             "base_volume": ticker.get("baseVolume"),
         }
 
+    async def get_tickers(self, quote: str = "USDT") -> list[dict]:
+        exchange = await self._loaded_client()
+        if not exchange.has.get("fetchTickers"):
+            raise AppError(
+                "PROVIDER_METHOD_UNSUPPORTED",
+                f"{self.id} 不支持批量行情查询",
+                status_code=422,
+            )
+        try:
+            tickers = await exchange.fetch_tickers()
+        except Exception as error:
+            raise AppError(
+                "PROVIDER_REQUEST_FAILED",
+                f"获取 {self.id} 行情列表失败",
+                status_code=502,
+                details={"reason": str(error)},
+            ) from error
+
+        result: list[dict] = []
+        for symbol, market in exchange.markets.items():
+            if market.get("active") is False:
+                continue
+            if self.market_type == "spot" and not market.get("spot", False):
+                continue
+            if str(market.get("quote", "")).upper() != quote.upper():
+                continue
+            ticker = tickers.get(symbol)
+            if not ticker:
+                continue
+            last = ticker.get("last")
+            open_price = ticker.get("open")
+            percentage = ticker.get("percentage")
+            if percentage is None and open_price and last:
+                percentage = (last / open_price - 1) * 100
+            base_volume = ticker.get("baseVolume")
+            quote_volume = ticker.get("quoteVolume")
+            if quote_volume is None and base_volume is not None and last is not None:
+                quote_volume = base_volume * last
+            result.append(
+                {
+                    "provider": self.id,
+                    "symbol": symbol,
+                    "base": market.get("base") or symbol.split("/")[0],
+                    "quote": market.get("quote") or quote.upper(),
+                    "last": last,
+                    "change_percent": percentage,
+                    "base_volume": base_volume,
+                    "quote_volume": quote_volume,
+                }
+            )
+        return result
+
+    async def get_order_book(self, symbol: str, limit: int = 20) -> dict:
+        exchange = await self._loaded_client()
+        if not exchange.has.get("fetchOrderBook"):
+            raise AppError(
+                "PROVIDER_METHOD_UNSUPPORTED",
+                f"{self.id} 不支持订单簿查询",
+                status_code=422,
+            )
+        try:
+            order_book = await exchange.fetch_order_book(symbol, limit)
+        except Exception as error:
+            raise AppError(
+                "PROVIDER_REQUEST_FAILED",
+                f"获取 {symbol} 订单簿失败",
+                status_code=502,
+                details={"reason": str(error)},
+            ) from error
+        return {
+            "provider": self.id,
+            "market_type": self.market_type,
+            "symbol": symbol,
+            "timestamp": order_book.get("timestamp"),
+            "bids": [
+                {"price": float(row[0]), "amount": float(row[1])}
+                for row in order_book.get("bids", [])[:limit]
+            ],
+            "asks": [
+                {"price": float(row[0]), "amount": float(row[1])}
+                for row in order_book.get("asks", [])[:limit]
+            ],
+        }
+
     async def get_candles(
         self,
         symbol: str,

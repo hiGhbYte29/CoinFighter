@@ -17,10 +17,10 @@ onMounted(async () => {
 });
 
 const navigation = [
-  { to: "/", index: "01", label: "实时看盘" },
-  { to: "/datasets", index: "02", label: "数据管理" },
-  { to: "/strategies", index: "03", label: "策略实验室" },
-  { to: "/backtests", index: "04", label: "回测分析" },
+  { to: "/", index: "01", label: "行情" },
+  { to: "/datasets", index: "02", label: "数据" },
+  { to: "/strategies", index: "03", label: "策略" },
+  { to: "/backtests", index: "04", label: "回测" },
 ];
 </script>
 

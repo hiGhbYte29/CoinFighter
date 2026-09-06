@@ -21,6 +21,49 @@ export interface Candle {
   is_closed: boolean;
 }
 
+export interface MarketSummary {
+  provider: string;
+  symbol: string;
+  base: string;
+  quote: string;
+  name: string;
+  image_url: string | null;
+  last: number | null;
+  change_percent: number | null;
+  base_volume: number | null;
+  quote_volume: number | null;
+  market_cap: number | null;
+  market_cap_rank: number | null;
+}
+
+export interface MarketPage {
+  provider: string;
+  page: number;
+  page_size: number;
+  total: number;
+  pages: number;
+  sort_by: MarketSortField;
+  sort_order: SortOrder;
+  items: MarketSummary[];
+}
+
+export type MarketSortField = "market_cap" | "quote_volume" | "change" | "price";
+export type SortOrder = "asc" | "desc";
+
+export interface OrderBookLevel {
+  price: number;
+  amount: number;
+}
+
+export interface OrderBook {
+  provider: string;
+  market_type: string;
+  symbol: string;
+  timestamp: number | null;
+  bids: OrderBookLevel[];
+  asks: OrderBookLevel[];
+}
+
 export interface Dataset {
   dataset_id: string;
   provider: string;
