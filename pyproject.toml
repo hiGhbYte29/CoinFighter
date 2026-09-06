@@ -15,6 +15,7 @@ dependencies = [
   "ccxt>=4.5,<5",
   "pyarrow>=21,<23",
   "httpx>=0.28,<1",
+  "websockets>=15,<18",
 ]
 
 [project.optional-dependencies]
@@ -25,7 +26,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["app*"]
+include = ["app*", "coinfighter*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

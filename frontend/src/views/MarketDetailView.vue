@@ -3,20 +3,26 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { getOrderBook, getProviders } from "@/api/market";
+import IndicatorDialog from "@/components/market/IndicatorDialog.vue";
 import MarketChart from "@/components/market/MarketChart.vue";
+import { useChartSocket } from "@/composables/useChartSocket";
 import { useMarketSocket } from "@/composables/useMarketSocket";
+import { useIndicatorStore } from "@/stores/indicators";
 import { useMarketStore } from "@/stores/market";
 import { useSettingsStore } from "@/stores/settings";
-import type { OrderBook, OrderBookLevel } from "@/types/api";
+import type { ChartDataRequest, IndicatorOutput, OrderBook, OrderBookLevel } from "@/types/api";
 
 const route = useRoute();
 const router = useRouter();
 const settings = useSettingsStore();
 const market = useMarketStore();
+const indicatorStore = useIndicatorStore();
 const providers = ref<Array<{ id: string; name: string }>>([]);
 const orderBook = ref<OrderBook | null>(null);
 const orderBookError = ref("");
 const orderBookLoading = ref(false);
+const indicatorDialogOpen = ref(false);
+const indicatorOutputs = ref<IndicatorOutput[]>([]);
 const allowedProviders = new Set(["binance", "okx", "bybit"]);
 const routeProvider = typeof route.query.provider === "string" ? route.query.provider : "";
 if (allowedProviders.has(routeProvider)) settings.provider = routeProvider;
@@ -25,8 +31,22 @@ const symbol = computed(() => String(route.params.symbol || "BTC-USDT").replace(
 const baseAsset = computed(() => symbol.value.split("/")[0]);
 const quoteAsset = computed(() => symbol.value.split("/")[1] || "USDT");
 const { connected, connect } = useMarketSocket((ticker) => { market.ticker = ticker; });
+const {
+  connected: chartConnected,
+  error: chartError,
+  connect: connectChart,
+} = useChartSocket((message) => {
+  if (!message.data) return;
+  market.candles = message.data.candles;
+  indicatorOutputs.value = message.data.indicators;
+  if (message.last_price != null && market.ticker) {
+    market.ticker = { ...market.ticker, last: message.last_price };
+  }
+});
 let orderBookTimer: number | undefined;
 let initialized = false;
+
+const realtimeConnected = computed(() => connected.value && chartConnected.value);
 
 const maxBookAmount = computed(() => Math.max(
   1,
@@ -73,10 +93,32 @@ async function reload() {
     loadOrderBook(),
   ]);
   connect(settings.provider, symbol.value);
+  connectRealtimeChart();
+}
+
+function chartRequest(): ChartDataRequest {
+  return {
+    provider: settings.provider,
+    market_type: "spot",
+    symbol: symbol.value,
+    timeframe: settings.timeframe,
+    visible_limit: 300,
+    indicators: indicatorStore.apiSelections,
+  };
+}
+
+function connectRealtimeChart() {
+  if (indicatorStore.catalog) connectChart(chartRequest());
+}
+
+function saveIndicators(configs: Parameters<typeof indicatorStore.save>[0]) {
+  indicatorStore.save(configs);
+  indicatorDialogOpen.value = false;
+  connectRealtimeChart();
 }
 
 onMounted(async () => {
-  providers.value = await getProviders();
+  [providers.value] = await Promise.all([getProviders(), indicatorStore.loadCatalog()]);
   initialized = true;
   await reload();
   orderBookTimer = window.setInterval(() => void loadOrderBook(true), 5000);
@@ -105,11 +147,12 @@ onBeforeUnmount(() => {
           <option v-for="item in ['1m', '5m', '15m', '1h', '4h', '1d']" :key="item">{{ item }}</option>
         </select>
       </label>
-      <span class="connection-pill" :class="{ online: connected }"><i></i>{{ connected ? "实时连接" : "正在连接" }}</span>
+      <span class="connection-pill" :class="{ online: realtimeConnected }"><i></i>{{ realtimeConnected ? "实时连接" : "正在连接" }}</span>
     </div>
   </div>
 
-  <div v-if="market.error" class="notice error">{{ market.error }}</div>
+  <div v-if="market.error || indicatorStore.error" class="notice error">{{ market.error || indicatorStore.error }}</div>
+  <div v-if="chartError" class="notice chart-stream-notice">{{ chartError }}</div>
 
   <section class="asset-heading">
     <div>
@@ -134,10 +177,20 @@ onBeforeUnmount(() => {
     <article class="panel detail-chart-panel">
       <div class="panel-heading">
         <div><p class="eyebrow">PRICE & VOLUME</p><h2>K 线与成交量</h2></div>
-        <span class="badge">{{ settings.timeframe }}</span>
+        <div class="chart-heading-actions">
+          <button class="indicator-trigger" @click="indicatorDialogOpen = true">
+            技术指标 <span>{{ indicatorStore.enabledCount }}</span>
+          </button>
+          <span class="badge">{{ settings.timeframe }}</span>
+        </div>
       </div>
       <div v-if="market.loading && !market.candles.length" class="chart-placeholder">正在加载 K 线…</div>
-      <MarketChart v-else :candles="market.candles" />
+      <MarketChart
+        v-else
+        :candles="market.candles"
+        :indicators="indicatorOutputs"
+        :configs="indicatorStore.selections"
+      />
     </article>
 
     <article class="panel order-book-panel">
@@ -163,4 +216,12 @@ onBeforeUnmount(() => {
       <div v-if="orderBookLoading && !orderBook" class="book-loading">正在加载订单簿…</div>
     </article>
   </div>
+
+  <IndicatorDialog
+    :open="indicatorDialogOpen"
+    :catalog="indicatorStore.catalog"
+    :configs="indicatorStore.selections"
+    @close="indicatorDialogOpen = false"
+    @save="saveIndicators"
+  />
 </template>

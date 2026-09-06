@@ -8,6 +8,7 @@ CoinFighter 是一个本地优先的数字资产行情研究与策略回测工�
 
 - Binance、OKX、Bybit 等 CCXT 公共行情适配。
 - 最新价格、近期 K 线和本地 WebSocket 行情推送。
+- 原生交易所 WebSocket 实时 K 线，以及可配置的主图/副图技术指标。
 - 历史 OHLCV 分页下载、增量合并、月度 Parquet 分区和数据质量检查。
 - 浏览器内创建、编辑和校验 Python 策略。
 - 下一根 K 线开盘成交的现货多头回测，支持手续费和滑点。
@@ -95,6 +96,26 @@ class ExampleStrategy(Strategy):
 ```
 
 当前策略文件是本机可信 Python 代码，不是安全沙箱。
+
+### 技术指标包
+
+策略可以直接使用随项目安装的轻量指标包。批量函数返回与输入等长的序列，预热期为
+`None`；`SMA` 和 `EMA` 类适合在逐根 K 线回测中增量计算：
+
+```python
+from coinfighter.indicators import EMA, macd, rsi, sma
+
+ma20 = sma(closes, 20)
+macd_result = macd(closes, fast=12, slow=26, signal=9)
+rsi14 = rsi(closes, 14)
+
+ema20 = EMA(20)
+latest = ema20.update(bar.close)
+```
+
+图表和策略调用相同的 Python 计算内核。目前支持 MA、EMA、WMA、BOLL、VWAP、
+SAR、Supertrend、VOL、MACD、RSI、MFI、KDJ、OBV、CCI、StochRSI、WR 和 TRIX。
+AVL 因标准 OHLCV 不包含精确成交额而暂时禁用。
 
 ## 测试
 

@@ -21,6 +21,89 @@ export interface Candle {
   is_closed: boolean;
 }
 
+export type IndicatorPlacement = "main" | "sub";
+export type IndicatorParameterType = "integer" | "number" | "integer_list" | "select";
+
+export interface IndicatorParameter {
+  key: string;
+  label: string;
+  type: IndicatorParameterType;
+  default: unknown;
+  minimum: number | null;
+  maximum: number | null;
+  max_items: number | null;
+  options: Array<{ value: string; label: string }>;
+}
+
+export interface IndicatorDefinition {
+  id: string;
+  name: string;
+  description: string;
+  placement: IndicatorPlacement;
+  parameters: IndicatorParameter[];
+  available: boolean;
+  unavailable_reason: string | null;
+}
+
+export interface IndicatorCatalog {
+  formula_version: number;
+  items: IndicatorDefinition[];
+}
+
+export interface IndicatorSelection {
+  instance_id: string;
+  indicator_id: string;
+  placement: IndicatorPlacement;
+  parameters: Record<string, unknown>;
+}
+
+export interface IndicatorGuide {
+  value: number;
+  label: string | null;
+}
+
+export interface IndicatorPlot {
+  key: string;
+  label: string;
+  render_type: "line" | "bar" | "scatter";
+  values: Array<number | null>;
+  color: string;
+}
+
+export interface IndicatorOutput {
+  instance_id: string;
+  indicator_id: string;
+  label: string;
+  placement: IndicatorPlacement;
+  plots: IndicatorPlot[];
+  guides: IndicatorGuide[];
+  axis_min: number | null;
+  axis_max: number | null;
+}
+
+export interface ChartDataRequest {
+  provider: string;
+  market_type: string;
+  symbol: string;
+  timeframe: string;
+  visible_limit: number;
+  indicators: IndicatorSelection[];
+}
+
+export interface ChartData {
+  formula_version: number;
+  candles: Candle[];
+  indicators: IndicatorOutput[];
+}
+
+export interface ChartStreamMessage {
+  type: "snapshot" | "update" | "error";
+  sequence?: number;
+  last_price?: number | null;
+  data?: ChartData;
+  message?: string;
+}
+
 export interface MarketSummary {
   provider: string;
   symbol: string;

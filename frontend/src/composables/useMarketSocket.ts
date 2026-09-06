@@ -11,14 +11,20 @@ export function useMarketSocket(onTicker: (ticker: Ticker) => void) {
   function connect(provider: string, symbol: string) {
     disconnect();
     desired = true;
-    socket = new WebSocket(tickerSocketUrl(provider, symbol));
-    socket.onopen = () => { connected.value = true; };
-    socket.onmessage = (event) => {
+    const current = new WebSocket(tickerSocketUrl(provider, symbol));
+    socket = current;
+    current.onopen = () => {
+      if (socket === current) connected.value = true;
+    };
+    current.onmessage = (event) => {
+      if (socket !== current) return;
       const payload = JSON.parse(event.data) as Ticker;
       if (payload.symbol) onTicker(payload);
     };
-    socket.onclose = () => {
+    current.onclose = () => {
+      if (socket !== current) return;
       connected.value = false;
+      socket = null;
       if (desired) reconnectTimer = window.setTimeout(() => connect(provider, symbol), 2000);
     };
   }
@@ -26,8 +32,9 @@ export function useMarketSocket(onTicker: (ticker: Ticker) => void) {
     desired = false;
     connected.value = false;
     if (reconnectTimer) window.clearTimeout(reconnectTimer);
-    socket?.close();
+    const current = socket;
     socket = null;
+    current?.close();
   }
   onBeforeUnmount(disconnect);
   return { connected, connect, disconnect };

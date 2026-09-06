@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.core.config import get_settings
+from app.infrastructure.providers.market_stream import MarketStreamService
 from app.infrastructure.providers.registry import ProviderRegistry
 from app.infrastructure.runtime.task_registry import TaskRegistry
 from app.infrastructure.storage.json_store import JsonStore
@@ -13,6 +14,7 @@ from app.infrastructure.storage.paths import StoragePaths
 from app.modules.backtest.runner import BacktestService
 from app.modules.datasets.catalog import DatasetCatalog
 from app.modules.datasets.service import DatasetService
+from app.modules.indicators.service import IndicatorService
 from app.modules.market.service import MarketService
 from app.modules.strategies.loader import StrategyLoader
 
@@ -31,6 +33,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     app.state.settings = settings
     app.state.market_service = MarketService(providers)
+    app.state.market_stream_service = MarketStreamService()
+    app.state.indicator_service = IndicatorService()
     app.state.dataset_service = DatasetService(
         providers,
         parquet,
