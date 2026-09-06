@@ -1,13 +1,5 @@
-from fastapi import FastAPI
+"""Compatibility entry point for ``uvicorn main:app``."""
 
-app = FastAPI()
+from app.main import app
 
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+__all__ = ["app"]

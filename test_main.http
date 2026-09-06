@@ -1,11 +1,21 @@
-# Test your FastAPI endpoints
+# CoinFighter FastAPI smoke requests
 
-GET http://127.0.0.1:8000/
+GET http://127.0.0.1:8000/api/v1/health/ready
 Accept: application/json
 
 ###
 
-GET http://127.0.0.1:8000/hello/User
+GET http://127.0.0.1:8000/api/v1/market/ticker?provider=binance&symbol=BTC%2FUSDT
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/api/v1/datasets
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/api/v1/strategies
 Accept: application/json
 
 ###
