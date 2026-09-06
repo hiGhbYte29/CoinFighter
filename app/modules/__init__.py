@@ -1,0 +1,1 @@
+"""CoinFighter domain modules."""

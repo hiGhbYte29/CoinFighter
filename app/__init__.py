@@ -1,0 +1,1 @@
+"""CoinFighter application package."""
